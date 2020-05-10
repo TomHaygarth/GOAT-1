@@ -1,8 +1,12 @@
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+
 #include <iostream>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define UNUSED(expr) (void)expr
 
@@ -37,7 +41,9 @@ int main()
     std::cout << "Init GLFW finished" << std::endl;
     std::cout << "Creating GLFW window" << std::endl;
 
-    window = glfwCreateWindow(640, 480, "OGAT - GOAT", NULL, NULL);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    window = glfwCreateWindow(800, 600, "OGAT - GOAT", nullptr, nullptr);
     if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -45,6 +51,13 @@ int main()
         return EXIT_FAILURE;
     }
     std::cout << "Created GLFW window" << std::endl;
+
+    uint32_t extensionCount = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    // glm::mat4 matrix;
+    // glm::vec4 vec;
+    // auto test = matrix * vec;
 
     glfwSetKeyCallback(window, key_callback);
 

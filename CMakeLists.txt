@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 project(OGAT-1 LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
@@ -7,43 +7,50 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# base src files
-set(base_src_includes
-    "src/main.cpp"
-)
-
-set(executable_name "OGAT-1-test")
-
-add_executable(${executable_name}
-    "${base_src_includes}"
-)
-
-
-# glfw libs
-find_package(glfw3 3.3 REQUIRED)
-target_include_directories(${executable_name} PUBLIC ${GLFW3_INCLUDE_DIR})
-target_link_libraries(${executable_name} ${GLFW3_LIBRARY})
-
-find_package(OpenGL REQUIRED)
-target_include_directories(${executable_name} PUBLIC ${OPENGL_INCLUDE_DIR})
-target_link_libraries(${executable_name} ${OPENGL_gl_LIBRARY})
+# Platform properties
+# --------------------------------------------------------------------------------
+set (BUILD_FOR_DESKTOP OFF CACHE INTERNAL "" FORCE)
+set (BUILD_FOR_MAC OFF CACHE INTERNAL "" FORCE)
+set (BUILD_FOR_WINDOWS OFF CACHE INTERNAL "" FORCE)
+set (BUILD_FOR_LINUX OFF CACHE INTERNAL "" FORCE)
 
 if (APPLE)
-	find_library(ObjC objc)
-	find_library(CoreFoundation CoreFoundation)
-	find_library(CoreVideo CoreVideo)
-	find_library(CoreGraphics CoreGraphics)
-	find_library(IOKit IOKit)
-	find_library(AppKit AppKit)
-	target_link_libraries(${executable_name} ${CoreGraphics} ${CoreVideo} ${CoreFoundation} ${IOKit} ${AppKit} ${ObjC})
+    set (DEFAULT_PLATFORM "macos")
+elseif (WIN32)
+    set (DEFAULT_PLATFORM "windows")
+else()
+    set (DEFAULT_PLATFORM "linux")
 endif()
 
-if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )
-    target_compile_options( ${executable_name} PRIVATE -Werror -Wall -Wextra -Wunreachable-code -Wpedantic)
+set (Platform ${DEFAULT_PLATFORM} CACHE STRING "Platform to build for")
+
+if (${Platform} STREQUAL "macos")
+
+    set (BUILD_FOR_DESKTOP ON CACHE INTERNAL "" FORCE)
+    set (BUILD_FOR_MAC ON CACHE INTERNAL "" FORCE)
+
+elseif (${Platform} STREQUAL "windows")
+
+    set (BUILD_FOR_DESKTOP ON CACHE INTERNAL "" FORCE)
+    set (BUILD_FOR_WINDOWS ON CACHE INTERNAL "" FORCE)
+
+elseif (${Platform} STREQUAL "linux")
+
+    set (BUILD_FOR_DESKTOP ON CACHE INTERNAL "" FORCE)
+    set (BUILD_FOR_LINUX ON CACHE INTERNAL "" FORCE)
+
 endif()
-if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
-    target_compile_options( ${executable_name} PRIVATE -Wweak-vtables -Wexit-time-destructors -Wglobal-constructors -Wmissing-noreturn )
+
+# Options
+# --------------------------------------------------------------------------------
+
+option(BUILD_EDITOR "Build the editor for the project" ON)
+option(BUILD_GAME "Build the game for the project" ON)
+
+if (BUILD_EDITOR AND BUILD_FOR_DESKTOP)
+	add_subdirectory(src/editor)
 endif()
-if ( CMAKE_CXX_COMPILER_ID MATCHES "MSVC" )
-    target_compile_options( ${executable_name} PRIVATE /WX /W4 /w44265 /w44061 /w44062 )
+
+if (BUILD_GAME)
+	add_subdirectory(src/game)
 endif()
