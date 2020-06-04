@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
-project(OGAT-1 LANGUAGES CXX)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    "${CMAKE_SOURCE_DIR}/cmake/"
+    "${CMAKE_SOURCE_DIR}/cmake/modules/"
+    )
+
+# Force Zero Check on xcode projects
+set (CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY ON)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,6 +34,7 @@ if (${Platform} STREQUAL "macos")
 
     set (BUILD_FOR_DESKTOP ON CACHE INTERNAL "" FORCE)
     set (BUILD_FOR_MAC ON CACHE INTERNAL "" FORCE)
+    set (CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version"  FORCE)
 
 elseif (${Platform} STREQUAL "windows")
 
@@ -46,6 +53,16 @@ endif()
 
 option(BUILD_EDITOR "Build the editor for the project" ON)
 option(BUILD_GAME "Build the game for the project" ON)
+
+# Find Libs
+# --------------------------------------------------------------------------------
+find_package(Vulkan REQUIRED)
+
+project(OGAT-1 LANGUAGES CXX)
+
+include(externals.cmake)
+
+add_subdirectory(src/shared)
 
 if (BUILD_EDITOR AND BUILD_FOR_DESKTOP)
 	add_subdirectory(src/editor)

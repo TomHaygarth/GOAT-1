@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+set(game_target "${CMAKE_PROJECT_NAME}")
 
 # game src files
 set(game_src_includes
@@ -14,9 +15,6 @@ set(game_src_includes
 #     )
 # endif()
 
-
-set(game_target "${CMAKE_PROJECT_NAME}")
-
 add_executable(${game_target}
     "${game_src_includes}"
 )
@@ -29,13 +27,16 @@ target_precompile_headers(${game_target} PRIVATE
                           )
 
 # glfw libs
-find_package(GLFW3 3.3 REQUIRED)
-target_include_directories(${game_target} PUBLIC ${GLFW3_INCLUDE_DIR})
-target_link_libraries(${game_target} ${GLFW3_LIBRARY})
+# find_package(GLFW3 3.3 REQUIRED)
+# target_include_directories(${game_target} PUBLIC ${GLFW3_INCLUDE_DIR})
+target_link_libraries(${game_target} glfw)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(${game_target} Vulkan::Vulkan)
 
+target_link_libraries(${game_target} PUBLIC
+    ${shared_target}
+)
 
 # Platform includes
 # --------------------------------------------------------------------------------

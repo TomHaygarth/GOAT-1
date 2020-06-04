@@ -19,13 +19,16 @@ target_precompile_headers(${editor_target} PRIVATE
                           )
 
 # glfw libs
-find_package(GLFW3 3.3 REQUIRED)
-target_include_directories(${editor_target} PUBLIC ${GLFW3_INCLUDE_DIR})
-target_link_libraries(${editor_target} ${GLFW3_LIBRARY})
+# find_package(GLFW3 3.3 REQUIRED)
+# target_include_directories(${editor_target} PUBLIC ${GLFW3_INCLUDE_DIR})
+target_link_libraries(${editor_target} glfw)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(${editor_target} Vulkan::Vulkan)
 
+target_link_libraries(${editor_target} PUBLIC
+    ${shared_target}
+)
 
 # Platform includes
 # --------------------------------------------------------------------------------
