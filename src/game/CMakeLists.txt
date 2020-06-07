@@ -51,6 +51,8 @@ if (APPLE)
     
     set_target_properties(${game_target} PROPERTIES
                           MACOSX_BUNDLE TRUE)
+
+    copy_vulkan_libs_to_target_bundle(${game_target})
 endif()
 
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )

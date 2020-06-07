@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(CMAKE_MODULE_PATH
-    ${CMAKE_MODULE_PATH}
-    "${CMAKE_SOURCE_DIR}/cmake/"
-    "${CMAKE_SOURCE_DIR}/cmake/modules/"
-    )
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake" "${CMAKE_SOURCE_DIR}/cmake/modules")
+
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+foreach(module_path ${CMAKE_MODULE_PATH})
+    message("Setting Module path to include : ${module_path}")
+endforeach()
+
 
 # Force Zero Check on xcode projects
 set (CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY ON)
@@ -60,7 +63,8 @@ find_package(Vulkan REQUIRED)
 
 project(OGAT-1 LANGUAGES CXX)
 
-include(externals.cmake)
+include(externals)
+include(helpers)
 
 add_subdirectory(src/shared)
 

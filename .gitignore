@@ -4,3 +4,5 @@ build*/
 #library files
 lib/
 includes/
+
+externals/
