@@ -12,6 +12,17 @@ if (BUILD_FOR_DESKTOP)
     add_subdirectory(${EXTERNAL_SRC_DIR}/glfw GLFW)
 
     set(VULKAN_EXTERNALS_DIR "${EXTERNAL_SRC_DIR}/vulkan-1.2.135.0")
+    set(MOLTENVK_EXTERNALS_DIR "${EXTERNAL_SRC_DIR}/MoltenVK")
+
+    if (BUILD_FOR_MAC)
+        set(LIB_VULKAN ${VULKAN_EXTERNALS_DIR}/macos/lib/libvulkan.dylib)
+        set(MOLTEN_VK_FRAMEWORK ${VULKAN_EXTERNALS_DIR}/macos/lib/libmoltenvk.dylib)
+        # link_directories("@executable_path")
+        # link_directories("@executable_path/../../Frameworks/")
+        include_directories("/usr/local/include")
+        include_directories(${VULKAN_EXTERNALS_DIR}/macos/include)
+        # LIB
+    endif()
 
 endif()
 

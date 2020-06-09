@@ -31,8 +31,8 @@ target_precompile_headers(${game_target} PRIVATE
 # target_include_directories(${game_target} PUBLIC ${GLFW3_INCLUDE_DIR})
 target_link_libraries(${game_target} glfw)
 
-find_package(Vulkan REQUIRED)
-target_link_libraries(${game_target} Vulkan::Vulkan)
+# find_package(Vulkan REQUIRED)
+# target_link_libraries(${game_target} Vulkan::Vulkan)
 
 target_link_libraries(${game_target} PUBLIC
     ${shared_target}
@@ -47,10 +47,18 @@ if (APPLE)
 	find_library(CoreGraphics CoreGraphics)
 	find_library(IOKit IOKit)
 	find_library(AppKit AppKit)
-    target_link_libraries(${game_target} ${CoreGraphics} ${CoreVideo} ${CoreFoundation} ${IOKit} ${AppKit} ${ObjC})
+    target_link_libraries(${game_target}
+        ${CoreGraphics}
+        ${CoreVideo}
+        ${CoreFoundation}
+        ${IOKit}
+        ${AppKit}
+        ${ObjC}
+        ${LIB_VULKAN})
     
     set_target_properties(${game_target} PROPERTIES
-                          MACOSX_BUNDLE TRUE)
+                          MACOSX_BUNDLE TRUE
+                          XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path @executable_path/../Frameworks")
 
     copy_vulkan_libs_to_target_bundle(${game_target})
 endif()

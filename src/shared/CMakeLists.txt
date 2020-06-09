@@ -12,6 +12,8 @@ add_library(${shared_target} STATIC
     ${shared_sources}
 )
 
+target_link_libraries(${shared_target} ${LIB_VULKAN})
+
 # Precompile Headers
 # --------------------------------------------------------------------------------
 target_precompile_headers(${shared_target} PRIVATE
