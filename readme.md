@@ -1,8 +1,12 @@
-# OGAT 1
+# GOAT Engine
 
-This is a quick game prototype that I've to try and construct on a short train journey.
-Currently there's no planned design for what this game should be.
+Game On A Train engine is a cross platform framework for games. A simple framework that will use the Vulkan api for platforms where it is supported.
+
+# Platforms
+* Windows 10
+* Mac OS 10.13+
 
 # Prerequisites
 * CMake 3.5+
 * GLFW 3.3
+* Vulkan SDK
