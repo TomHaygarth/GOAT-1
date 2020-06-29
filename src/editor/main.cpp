@@ -7,6 +7,9 @@
 #include <glm/mat4x4.hpp>
 
 #include <iostream>
+#include <memory>
+
+#include "renderer/render_context.hpp"
 
 #define UNUSED(expr) (void)expr
 
@@ -54,6 +57,19 @@ int main()
 
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+    std::unique_ptr<Renderer::VulkanRenderContext> renderer = std::make_unique<Renderer::VulkanRenderContext>();
+    if (renderer->HasError() == false)
+    {
+        renderer->Init();
+    }
+
+    if (renderer->HasError())
+    {
+        std::cerr << renderer->GetLastError() << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
     // glm::mat4 matrix;
     // glm::vec4 vec;

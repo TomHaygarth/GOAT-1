@@ -15,13 +15,8 @@ if (BUILD_FOR_DESKTOP)
     set(MOLTENVK_EXTERNALS_DIR "${EXTERNAL_SRC_DIR}/MoltenVK")
 
     if (BUILD_FOR_MAC)
-        set(LIB_VULKAN ${VULKAN_EXTERNALS_DIR}/macos/lib/libvulkan.dylib)
-        set(MOLTEN_VK_FRAMEWORK ${VULKAN_EXTERNALS_DIR}/macos/lib/libmoltenvk.dylib)
-        # link_directories("@executable_path")
-        # link_directories("@executable_path/../../Frameworks/")
-        include_directories("/usr/local/include")
-        include_directories(${VULKAN_EXTERNALS_DIR}/macos/include)
-        # LIB
+        set(ENV{VULKAN_SDK} ${VULKAN_EXTERNALS_DIR}/macos)
+        message("Set VULKAN_SDK env var to $ENV{VULKAN_SDK}")
     endif()
 
 endif()

@@ -57,14 +57,16 @@ endif()
 option(BUILD_EDITOR "Build the editor for the project" ON)
 option(BUILD_GAME "Build the game for the project" ON)
 
-# Find Libs
-# --------------------------------------------------------------------------------
-find_package(Vulkan REQUIRED)
 
 project(OGAT-1 LANGUAGES CXX)
 
 include(externals)
 include(helpers)
+
+# Find Libs
+# --------------------------------------------------------------------------------
+message("Using VULKAN_SDK env var : $ENV{VULKAN_SDK}")
+find_package(Vulkan REQUIRED)
 
 add_subdirectory(src/shared)
 
