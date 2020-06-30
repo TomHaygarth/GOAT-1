@@ -1,12 +1,45 @@
 #include "render_context.hpp"
 
+#include "utility/logging.hpp"
+
 #include <cinttypes>
+#include <iostream>
+#include <sstream>
 #include <vector>
+#include <utility>
 
 #include <GLFW/glfw3.h>
 
 namespace
 {
+    struct SQueueFamilyIndices {
+        std::pair<bool, uint32_t> graphicsFamily = {false, 0};
+    };
+
+    SQueueFamilyIndices find_queue_families(VkPhysicalDevice device)
+    {
+        SQueueFamilyIndices indices;
+
+        uint32_t queue_family_count = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
+        vkGetPhysicalDeviceQueueFamilyProperties(device,
+                                                 &queue_family_count,
+                                                 queue_families.data());
+        uint32_t i = 0;
+        for (auto const & queue : queue_families)
+        {
+            if ((queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)
+            {
+                indices.graphicsFamily = std::make_pair(true, i);
+                break;
+            }
+        }
+
+        return indices;
+    }
+
     uint64_t score_physical_device(VkPhysicalDevice device)
     {
         uint64_t score = 0;
@@ -16,12 +49,24 @@ namespace
         vkGetPhysicalDeviceProperties(device, &device_properties);
         vkGetPhysicalDeviceFeatures(device, &device_features);
 
+        Utility::DEBUG_LOG(std::string(device_properties.deviceName));
+
         if  (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             score += 10000;
         }
 
         score += static_cast<uint64_t>(device_properties.limits.maxImageDimension2D);
+
+        SQueueFamilyIndices const family_queue = find_queue_families(device);
+        if (family_queue.graphicsFamily.first == false)
+        {
+            score = 0;
+        }
+
+        std::stringstream sstrm;
+        sstrm << "Found physical device " << device_properties.deviceName << " with score : " << score;
+        Utility::DEBUG_LOG(sstrm.str());
 
         return score;
     }
@@ -46,6 +91,7 @@ Renderer::VulkanRenderContext::VulkanRenderContext()
 
     create_info.ppEnabledExtensionNames = glfw_extensions;
     create_info.enabledExtensionCount = glfw_extension_count;
+    create_info.pNext = nullptr;
 
     create_info.enabledLayerCount = 0;
 
@@ -70,7 +116,7 @@ bool Renderer::VulkanRenderContext::Init()
         return false;
     }
 
-    std::vector<VkPhysicalDevice> devices;
+    std::vector<VkPhysicalDevice> devices(device_count);
     vkEnumeratePhysicalDevices(m_instance, &device_count, devices.data());
     uint64_t device_score = 0;
     for (auto & device : devices)
@@ -87,6 +133,10 @@ bool Renderer::VulkanRenderContext::Init()
     {
          m_last_error = "All devices found were unsuitable";
         return false;
+    }
+    else
+    {
+        Utility::DEBUG_LOG("Selected a physical device");
     }
     return true;
 }

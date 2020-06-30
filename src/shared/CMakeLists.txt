@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.16)
 set (shared_sources
     "renderer/render_context.cpp"
     "renderer/render_context.hpp"
+
+    "utility/logging.cpp"
+    "utility/logging.hpp"
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${shared_sources})
 
@@ -28,6 +31,7 @@ target_link_libraries(shared_target glfw)
 target_precompile_headers(shared_target PRIVATE
                           <glm/vec4.hpp>
                           <glm/mat4x4.hpp>
+                          utility/logging.hpp
                           )
 
 target_compile_features(shared_target PUBLIC cxx_std_14)

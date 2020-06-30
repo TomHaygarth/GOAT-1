@@ -16,8 +16,8 @@ namespace Renderer
         std::string const GetLastError() const { return m_last_error; }
 
     private:
-        VkInstance m_instance;
-        VkPhysicalDevice m_physical_device;
+        VkInstance m_instance = VK_NULL_HANDLE;
+        VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         std::string m_last_error;
     };
 }
