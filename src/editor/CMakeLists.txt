@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 set(editor_src_includes
     "main.cpp"
 )
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${editor_src_includes})
 
 # set(editor_target "${CMAKE_PROJECT_NAME}-editor")
 

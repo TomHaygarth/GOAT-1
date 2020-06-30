@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 set(game_src_includes
     "main.cpp"
 )
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${game_src_includes})
 
 # TODO: Make platform specific entry point files
 # # Add platform specific entry point
