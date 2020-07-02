@@ -57,7 +57,6 @@ endif()
 option(BUILD_EDITOR "Build the editor for the project" ON)
 option(BUILD_GAME "Build the game for the project" ON)
 
-
 project(OGAT-1 LANGUAGES CXX)
 
 include(externals)

@@ -27,15 +27,12 @@ target_precompile_headers(game_target PRIVATE
                           <glm/mat4x4.hpp>
                           )
 
-# glfw libs
-# find_package(GLFW3 3.3 REQUIRED)
-# target_include_directories(game_target PUBLIC ${GLFW3_INCLUDE_DIR})
-
 if (BUILD_FOR_DESKTOP)
     find_package(Vulkan REQUIRED)
 
     target_link_libraries(game_target PUBLIC
         glfw
+        glm::glm
         Vulkan::Vulkan
         shared_target
     )

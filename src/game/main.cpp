@@ -38,7 +38,6 @@ int main()
     if (glfwInit() == false)
     {
     std::cout << "Failed to init GLFW" << std::endl;
-        exit(EXIT_FAILURE);
         return EXIT_FAILURE;
     }
     std::cout << "Init GLFW finished" << std::endl;

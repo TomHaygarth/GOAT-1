@@ -30,6 +30,7 @@ if (BUILD_FOR_DESKTOP)
         shared_target
         glfw
         Vulkan::Vulkan
+        glm::glm
     )
 endif ()
 

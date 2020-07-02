@@ -25,6 +25,7 @@ message ("INCLUDING ${CMAKE_CURRENT_SOURCE_DIR}")
 find_package(Vulkan REQUIRED)
 target_link_libraries(shared_target Vulkan::Vulkan)
 target_link_libraries(shared_target glfw)
+target_link_libraries(shared_target glm::glm)
 
 # Precompile Headers
 # --------------------------------------------------------------------------------
