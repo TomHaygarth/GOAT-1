@@ -70,6 +70,19 @@ namespace
 
         return score;
     }
+
+    bool create_logical_device(VkPhysicalDevice device)
+    {
+        SQueueFamilyIndices const indices = find_queue_families(device);
+        VkDeviceQueueCreateInfo queue_info{};
+        queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_info.queueFamilyIndex = indices.graphicsFamily.second;
+        queue_info.pNext = nullptr;
+        queue_info.queueCount = 1;
+
+        float priorities = 1.0f;
+        queue_info.pQueuePriorities = &priorities;
+    }
 }
 Renderer::VulkanRenderContext::VulkanRenderContext()
 {
