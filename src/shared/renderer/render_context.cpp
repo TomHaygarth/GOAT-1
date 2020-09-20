@@ -13,7 +13,7 @@
 namespace
 {
     struct SQueueFamilyIndices {
-        std::pair<bool, uint32_t> graphicsFamily = {false, 0};
+        std::pair<bool, uint32_t> graphicsFamily = { false, 0 };
     };
 
     SQueueFamilyIndices find_queue_families(VkPhysicalDevice device)
@@ -51,7 +51,7 @@ namespace
 
         DEBUG_LOG(std::string(device_properties.deviceName));
 
-        if  (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+        if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             score += 10000;
         }
@@ -70,20 +70,8 @@ namespace
 
         return score;
     }
-
-    bool create_logical_device(VkPhysicalDevice device)
-    {
-        SQueueFamilyIndices const indices = find_queue_families(device);
-        VkDeviceQueueCreateInfo queue_info{};
-        queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queue_info.queueFamilyIndex = indices.graphicsFamily.second;
-        queue_info.pNext = nullptr;
-        queue_info.queueCount = 1;
-
-        float priorities = 1.0f;
-        queue_info.pQueuePriorities = &priorities;
-    }
 }
+
 Renderer::VulkanRenderContext::VulkanRenderContext()
 {
     VkApplicationInfo app_info;
@@ -116,6 +104,11 @@ Renderer::VulkanRenderContext::VulkanRenderContext()
 
 Renderer::VulkanRenderContext::~VulkanRenderContext()
 {
+    if (m_logical_device != VK_NULL_HANDLE)
+    {
+        vkDestroyDevice(m_logical_device, nullptr);
+    }
+
     vkDestroyInstance(m_instance, nullptr);
 }
 
@@ -151,5 +144,50 @@ bool Renderer::VulkanRenderContext::Init()
     {
         DEBUG_LOG("Selected a physical device");
     }
+
+    if (CreateLogicalDevice() == true)
+    {
+        DEBUG_LOG("Logical device created");
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Renderer::VulkanRenderContext::CreateLogicalDevice()
+{
+    SQueueFamilyIndices const indices = find_queue_families(m_physical_device);
+    VkDeviceQueueCreateInfo queue_info{};
+    queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queue_info.queueFamilyIndex = indices.graphicsFamily.second;
+    queue_info.pNext = nullptr;
+    queue_info.queueCount = 1;
+
+    float priorities = 1.0f;
+    queue_info.pQueuePriorities = &priorities;
+
+    VkPhysicalDeviceFeatures device_features{};
+    VkDeviceCreateInfo device_create_info{};
+    device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_create_info.pQueueCreateInfos = &queue_info;
+    device_create_info.queueCreateInfoCount = 1;
+    queue_info.pNext = nullptr;
+
+    device_create_info.pEnabledFeatures = &device_features;
+
+    if (vkCreateDevice(m_physical_device, &device_create_info, nullptr, &m_logical_device) != VK_SUCCESS)
+    {
+        m_last_error = "Failed to create logical device";
+        ERROR_LOG(m_last_error);
+        return false;
+    }
+    else
+    {
+        vkGetDeviceQueue(m_logical_device, indices.graphicsFamily.second, 0, &m_graphics_queue);
+    }
+
     return true;
 }
