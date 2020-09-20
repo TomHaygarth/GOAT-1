@@ -9,6 +9,7 @@ set (shared_sources
 
     "utility/logging.cpp"
     "utility/logging.hpp"
+    "utility/optional.hpp"
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${shared_sources})
 
@@ -33,6 +34,7 @@ target_precompile_headers(shared_target PRIVATE
                           <glm/vec4.hpp>
                           <glm/mat4x4.hpp>
                           utility/logging.hpp
+                          utility/optional.hpp
                           )
 
 target_compile_features(shared_target PUBLIC cxx_std_14)
