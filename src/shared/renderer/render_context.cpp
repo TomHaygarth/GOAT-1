@@ -49,7 +49,7 @@ namespace
         vkGetPhysicalDeviceProperties(device, &device_properties);
         vkGetPhysicalDeviceFeatures(device, &device_features);
 
-        Utility::DEBUG_LOG(std::string(device_properties.deviceName));
+        DEBUG_LOG(std::string(device_properties.deviceName));
 
         if  (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
@@ -66,7 +66,7 @@ namespace
 
         std::stringstream sstrm;
         sstrm << "Found physical device " << device_properties.deviceName << " with score : " << score;
-        Utility::DEBUG_LOG(sstrm.str());
+        DEBUG_LOG(sstrm.str());
 
         return score;
     }
@@ -149,7 +149,7 @@ bool Renderer::VulkanRenderContext::Init()
     }
     else
     {
-        Utility::DEBUG_LOG("Selected a physical device");
+        DEBUG_LOG("Selected a physical device");
     }
     return true;
 }

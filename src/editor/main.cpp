@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "renderer/render_context.hpp"
+#include "utility/logging.hpp"
 
 #define UNUSED(expr) (void)expr
 
@@ -65,7 +66,7 @@ int main()
 
     if (renderer->HasError())
     {
-        std::cerr << renderer->GetLastError() << std::endl;
+        ERROR_LOG(renderer->GetLastError());
         glfwTerminate();
         return EXIT_FAILURE;
     }
