@@ -58,7 +58,7 @@ int main()
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    std::unique_ptr<Renderer::VulkanRenderContext> renderer = std::make_unique<Renderer::VulkanRenderContext>();
+    std::unique_ptr<Renderer::VulkanRenderContext> renderer = std::make_unique<Renderer::VulkanRenderContext>(window);
     if (renderer->HasError() == false)
     {
         renderer->Init();

@@ -3,12 +3,14 @@
 #include <vulkan/vulkan.h>
 #include<string>
 
+struct GLFWwindow;
+
 namespace Renderer
 {
     class VulkanRenderContext
     {
     public:
-        VulkanRenderContext();
+        VulkanRenderContext(GLFWwindow * glfw_window);
         ~VulkanRenderContext();
 
         bool Init();
@@ -23,6 +25,9 @@ namespace Renderer
         VkPhysicalDevice m_physical_device = VK_NULL_HANDLE;
         VkDevice m_logical_device = VK_NULL_HANDLE;
         VkQueue m_graphics_queue = VK_NULL_HANDLE;
+        VkQueue m_present_queue = VK_NULL_HANDLE;
+        VkSurfaceKHR m_surface = VK_NULL_HANDLE;
+
         std::string m_last_error;
     };
 }
