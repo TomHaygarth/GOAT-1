@@ -3,9 +3,11 @@
 #include "utility/logging.hpp"
 #include "utility/optional.hpp"
 
+#include <array>
 #include <cinttypes>
 #include <iostream>
 #include <sstream>
+#include <set>
 #include <vector>
 #include <utility>
 
@@ -27,7 +29,7 @@ namespace
     std::vector<VkDeviceQueueCreateInfo> create_device_queue_info_from_indices(SQueueFamilyIndices const & indices)
     {
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        std::vector<uint32_t> queue_families = {
+        std::set<uint32_t> queue_families = {
             indices.graphicsFamily.Value(),
             indices.presentFamily.Value()
         };
@@ -84,6 +86,37 @@ namespace
         return indices;
     }
 
+    constexpr std::array<const char*, 1> required_device_extensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+
+    bool const is_device_suitable(VkPhysicalDevice device, VkSurfaceKHR surface)
+    {
+        SQueueFamilyIndices const family_queue = find_queue_families(device, surface);
+        std::set<std::string> required_extensions (required_device_extensions.begin(),
+                                                   required_device_extensions.end());
+
+        uint32_t extension_count = 0;
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, nullptr);
+        std::vector<VkExtensionProperties> available_extensions(extension_count);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count, available_extensions.data());
+
+        for (auto const & extension : available_extensions)
+        {
+            DEBUG_LOG("Found extension: " + std::string(extension.extensionName));
+
+            required_extensions.erase(extension.extensionName);
+        }
+
+        for (auto const & extension_name : required_extensions)
+        {
+            DEBUG_LOG("Missing required: " + extension_name);
+        }
+
+        return required_extensions.empty()
+            && family_queue.graphicsFamily.HasValue() == true
+            && family_queue.presentFamily.HasValue() == true;
+    }
     uint64_t score_physical_device(VkPhysicalDevice device, VkSurfaceKHR surface)
     {
         uint64_t score = 0;
@@ -102,8 +135,7 @@ namespace
 
         score += static_cast<uint64_t>(device_properties.limits.maxImageDimension2D);
 
-        SQueueFamilyIndices const family_queue = find_queue_families(device, surface);
-        if (family_queue.graphicsFamily.HasValue() == false || family_queue.presentFamily.HasValue() == false)
+        if (is_device_suitable(device, surface) == false)
         {
             score = 0;
         }
