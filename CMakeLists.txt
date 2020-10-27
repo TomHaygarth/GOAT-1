@@ -67,6 +67,8 @@ include(helpers)
 message("Using VULKAN_SDK env var : $ENV{VULKAN_SDK}")
 find_package(Vulkan REQUIRED)
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX resources/)
+
 add_subdirectory(src/shared)
 
 if (BUILD_EDITOR AND BUILD_FOR_DESKTOP)

@@ -535,3 +535,8 @@ bool Renderer::VulkanRenderContext::CreateImageViews()
     }
     return true;
 }
+
+bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
+{
+    return true;
+}

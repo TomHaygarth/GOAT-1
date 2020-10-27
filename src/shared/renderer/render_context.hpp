@@ -23,6 +23,7 @@ namespace Renderer
         bool CreateLogicalDevice();
         bool CreateSwapChain();
         bool CreateImageViews();
+        bool CreateGraphicsPipeline();
 
         GLFWwindow * m_ptr_glfw_window = nullptr;
 
