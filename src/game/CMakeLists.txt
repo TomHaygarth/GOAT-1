@@ -36,6 +36,17 @@ if (BUILD_FOR_DESKTOP)
         Vulkan::Vulkan
         shared_target
     )
+elseif(BUILD_FOR_IOS)
+    target_link_libraries(game_target PUBLIC
+        glfw
+        glm::glm
+        Vulkan::Vulkan
+        shared_target
+    )
+
+    set_xcode_property(game_target PRODUCT_NAME GOAT_ENGINE_Game All)
+    set_xcode_property(game_target PRODUCT_BUNDLE_IDENTIFIER com.goatengine.game All)
+
 endif ()
 
 # Platform includes

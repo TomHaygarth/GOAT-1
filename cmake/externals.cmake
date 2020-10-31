@@ -23,5 +23,20 @@ if (BUILD_FOR_DESKTOP)
 		# add_subdirectory(${EXTERNAL_SRC_DIR}/glm)
     endif()
 
+elseif (BUILD_FOR_IOS)
+
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
+    message("ADDING SUBDIR GLFW : ${EXTERNAL_SRC_DIR}/glfw")
+    add_subdirectory(${EXTERNAL_SRC_DIR}/glfw GLFW)
+    add_subdirectory(${EXTERNAL_SRC_DIR}/glm)
+
+    set(VULKAN_EXTERNALS_DIR "${EXTERNAL_SRC_DIR}/vulkan-1.2.135.0")
+    set(MOLTENVK_EXTERNALS_DIR "${EXTERNAL_SRC_DIR}/MoltenVK")
+
+    set(ENV{VULKAN_SDK} ${VULKAN_EXTERNALS_DIR}/macos)
+    message("Set VULKAN_SDK env var to $ENV{VULKAN_SDK}")
+
 endif()
 
