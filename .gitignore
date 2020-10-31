@@ -1,5 +1,9 @@
 #ignore build folders
 build*/
+.vscode/
+
+#ignore compiled shaders
+*.spv
 
 #library files
 lib/
