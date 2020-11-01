@@ -2,6 +2,7 @@
 
 #include "utility/logging.hpp"
 #include "utility/optional.hpp"
+#include "utility/file/file_helper.hpp"
 
 #include <array>
 #include <cinttypes>
@@ -266,6 +267,27 @@ namespace
     }
 }
 #pragma endregion
+
+// ------------------------------------------------------------------------------------------------------------------------- //
+#pragma mark -- graphics pipeline helpers
+#pragma region
+// ------------------------------------------------------------------------------------------------------------------------- //
+
+VkShaderModule create_shader_module(VkDevice device, std::vector<char> const & shader_code)
+{
+    VkShaderModuleCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    create_info.codeSize = shader_code.size();
+    create_info.pCode = reinterpret_cast<const uint32_t *>(shader_code.data());
+
+    VkShaderModule module;
+    if (vkCreateShaderModule(device, &create_info, nullptr, &module) != VK_SUCCESS)
+    {
+        ERROR_LOG("Failed to create shadre module.");
+        module = VK_NULL_HANDLE;
+    }
+    return module;
+}
 
 // ------------------------------------------------------------------------------------------------------------------------- //
 
@@ -538,5 +560,50 @@ bool Renderer::VulkanRenderContext::CreateImageViews()
 
 bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
 {
-    return true;
+    bool result = true;
+
+    auto vert_shader_code = FileHelpers::read_file("resources/shaders/basic_unlit_vert.spv");
+    auto frag_shader_code = FileHelpers::read_file("resources/shaders/basic_unlit_frag.spv");
+
+    result = vert_shader_code.empty() == false && frag_shader_code.empty() == false;
+
+    VkShaderModule vert_shader_module = VK_NULL_HANDLE;
+    VkShaderModule frag_shader_module = VK_NULL_HANDLE;
+
+    if (result == true)
+    {
+        vert_shader_module = create_shader_module(m_logical_device, vert_shader_code);
+        frag_shader_module = create_shader_module(m_logical_device, frag_shader_code);
+    }
+
+    result = vert_shader_module != VK_NULL_HANDLE && frag_shader_module != VK_NULL_HANDLE;
+
+    if (result == true)
+    {
+        VkPipelineShaderStageCreateInfo vert_shader_create_info = {};
+        vert_shader_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vert_shader_create_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vert_shader_create_info.module = vert_shader_module;
+        vert_shader_create_info.pName = "main";
+
+
+        VkPipelineShaderStageCreateInfo frag_shader_create_info = {};
+        frag_shader_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        frag_shader_create_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        frag_shader_create_info.module = frag_shader_module;
+        frag_shader_create_info.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shader_stages[] = { vert_shader_create_info, frag_shader_create_info };
+    }
+
+    if(frag_shader_module != VK_NULL_HANDLE)
+    {
+        vkDestroyShaderModule(m_logical_device, frag_shader_module, nullptr);
+    }
+
+    if (vert_shader_module != VK_NULL_HANDLE)
+    {
+        vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
+    }
+    return result;
 }
