@@ -15,6 +15,9 @@ add_executable(editor_target
 # Precompile Headers
 # --------------------------------------------------------------------------------
 target_precompile_headers(editor_target PRIVATE
+                          <cinttypes>
+                          <string>
+                          <vector>
                           <glm/vec4.hpp>
                           <glm/mat4x4.hpp>
                           )

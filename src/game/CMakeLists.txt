@@ -23,6 +23,9 @@ add_executable(game_target
 # Precompile Headers
 # --------------------------------------------------------------------------------
 target_precompile_headers(game_target PRIVATE
+                          <cinttypes>
+                          <string>
+                          <vector>
                           <glm/vec4.hpp>
                           <glm/mat4x4.hpp>
                           )
