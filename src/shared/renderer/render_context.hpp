@@ -23,6 +23,7 @@ namespace Renderer
         bool CreateLogicalDevice();
         bool CreateSwapChain();
         bool CreateImageViews();
+        bool CreateRenderPass();
         bool CreateGraphicsPipeline();
 
         GLFWwindow * m_ptr_glfw_window = nullptr;
@@ -36,6 +37,9 @@ namespace Renderer
         VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
         VkFormat m_swapchain_format;
         VkExtent2D m_surface_extent;
+        VkRenderPass m_render_pass = VK_NULL_HANDLE;
+        VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
+        VkPipeline m_graphics_pipeline = VK_NULL_HANDLE;
 
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
