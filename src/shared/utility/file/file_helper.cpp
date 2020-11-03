@@ -20,7 +20,7 @@ std::vector<char> FileHelpers::read_file(std::string const & filename)
         if (file_size > 0)
         {
             file.seekg(0);
-            result.reserve(static_cast<size_t>(file_size));
+            result.resize(static_cast<size_t>(file_size));
             file.read(result.data(), static_cast<size_t>(file_size));
         }
         else

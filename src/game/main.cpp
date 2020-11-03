@@ -77,9 +77,10 @@ int main()
 
     glfwSetKeyCallback(window, key_callback);
 
-    while (glfwWindowShouldClose(window) == false)
+    while (glfwWindowShouldClose(window) == false && renderer->HasError() == false)
     {
         glfwPollEvents();
+        renderer->RenderFrame();
     }
 
     std::cout << "Quitting" << std::endl;

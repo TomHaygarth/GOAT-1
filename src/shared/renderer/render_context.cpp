@@ -333,6 +333,29 @@ Renderer::VulkanRenderContext::VulkanRenderContext(GLFWwindow * glfw_window)
 
 Renderer::VulkanRenderContext::~VulkanRenderContext()
 {
+    if (m_render_finished_semaphore != VK_NULL_HANDLE)
+    {
+        vkDestroySemaphore(m_logical_device, m_render_finished_semaphore, nullptr);
+    }
+
+    if (m_image_available_semaphore != VK_NULL_HANDLE)
+    {
+        vkDestroySemaphore(m_logical_device, m_image_available_semaphore, nullptr);
+    }
+
+    if (m_command_pool != VK_NULL_HANDLE)
+    {
+        vkDestroyCommandPool(m_logical_device, m_command_pool, nullptr);
+    }
+
+    for (auto framebuffer : m_swapchain_framebuffers)
+    {
+        if (framebuffer != VK_NULL_HANDLE)
+        {
+            vkDestroyFramebuffer(m_logical_device, framebuffer, nullptr);
+        }
+    }
+
     if (m_graphics_pipeline != VK_NULL_HANDLE)
     {
         vkDestroyPipeline(m_logical_device, m_graphics_pipeline, nullptr);
@@ -450,7 +473,92 @@ bool Renderer::VulkanRenderContext::Init()
         return false;
     }
 
+    if (CreateFramebuffers() == true)
+    {
+        DEBUG_LOG("Framebuffers created");
+    }
+    else
+    {
+        return false;
+    }
+
+    if (CreateCommandPool() == true)
+    {
+        DEBUG_LOG("Command pool created");
+    }
+    else
+    {
+        return false;
+    }
+
+    if (CreateCommandBuffers() == true)
+    {
+        DEBUG_LOG("Command buffers created");
+    }
+    else
+    {
+        return false;
+    }
+
+    if (CreateSemaphores() == true)
+    {
+        DEBUG_LOG("Semaphores created");
+    }
+    else
+    {
+        return false;
+    }
+
     return true;
+}
+
+void Renderer::VulkanRenderContext::RenderFrame()
+{
+    uint32_t image_index = 0;
+    vkAcquireNextImageKHR(m_logical_device,
+                          m_swapchain,
+                          UINT64_MAX,
+                          m_image_available_semaphore,
+                          VK_NULL_HANDLE,
+                          &image_index);
+
+    VkSubmitInfo submit_info = {};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore wait_semaphores[] = { m_image_available_semaphore };
+    VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores = wait_semaphores;
+    submit_info.pWaitDstStageMask = wait_stages;
+
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &m_command_buffers[image_index];
+
+    VkSemaphore signal_semaphores[] = { m_render_finished_semaphore };
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores = signal_semaphores;
+
+    if (vkQueueSubmit(m_graphics_queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS)
+    {
+        m_last_error = "failed to submit draw command buffer!";
+        ERROR_LOG(m_last_error);
+        return;
+    }
+
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signal_semaphores;
+
+    VkSwapchainKHR swapChains[] = { m_swapchain };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &image_index;
+
+    presentInfo.pResults = nullptr; // Optional
+
+    vkQueuePresentKHR(m_present_queue, &presentInfo);
 }
 
 bool Renderer::VulkanRenderContext::CreateLogicalDevice()
@@ -623,9 +731,22 @@ bool Renderer::VulkanRenderContext::CreateRenderPass()
     render_pass_info.subpassCount = 1;
     render_pass_info.pSubpasses = &subpass;
 
+    VkSubpassDependency dependency = {};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+    render_pass_info.dependencyCount = 1;
+    render_pass_info.pDependencies = &dependency;
+
     if (vkCreateRenderPass(m_logical_device, &render_pass_info, nullptr, &m_render_pass) != VK_SUCCESS)
     {
-        ERROR_LOG("failed to create render pass!");
+        m_last_error = "failed to create render pass";
+        ERROR_LOG(m_last_error);
         return false;
     }
     return true;
@@ -635,8 +756,8 @@ bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
 {
     bool result = true;
 
-    auto vert_shader_code = FileHelpers::read_file("resources/shaders/basic_unlit_vert.spv");
-    auto frag_shader_code = FileHelpers::read_file("resources/shaders/basic_unlit_frag.spv");
+    auto vert_shader_code = FileHelpers::read_file("shaders/basic_unlit_vert.spv");
+    auto frag_shader_code = FileHelpers::read_file("shaders/basic_unlit_frag.spv");
 
     result = vert_shader_code.empty() == false && frag_shader_code.empty() == false;
 
@@ -689,7 +810,7 @@ bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor = {};
-        scissor.offset = { 0.0f, 0.0f };
+        scissor.offset = { 0, 0 };
         scissor.extent = m_surface_extent;
 
         VkPipelineViewportStateCreateInfo viewport_state = {};
@@ -751,7 +872,8 @@ bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
 
         if (vkCreatePipelineLayout(m_logical_device, &pipeline_layout_info, nullptr, &m_pipeline_layout) != VK_SUCCESS)
         {
-            ERROR_LOG("failed to create pipeline layout!");
+            m_last_error = "failed to create pipeline layout!";
+            ERROR_LOG(m_last_error);
             result = false;
         }
 
@@ -779,9 +901,15 @@ bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
 
         if (vkCreateGraphicsPipelines(m_logical_device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &m_graphics_pipeline) != VK_SUCCESS)
         {
-            ERROR_LOG("failed to create graphics pipeline!");
+            m_last_error = "failed to create graphics pipeline!";
+            ERROR_LOG(m_last_error);
             result = false;
         }
+    }
+    else
+    {
+        m_last_error = "Failed to load shader files";
+        ERROR_LOG(m_last_error);
     }
 
     if(frag_shader_module != VK_NULL_HANDLE)
@@ -794,4 +922,128 @@ bool Renderer::VulkanRenderContext::CreateGraphicsPipeline()
         vkDestroyShaderModule(m_logical_device, vert_shader_module, nullptr);
     }
     return result;
+}
+
+bool Renderer::VulkanRenderContext::CreateFramebuffers()
+{
+    bool success = true;
+    m_swapchain_framebuffers.resize(m_swapchain_image_views.size(), VK_NULL_HANDLE);
+
+    for (size_t i = 0; i < m_swapchain_image_views.size() && success == true; ++i)
+    {
+        VkImageView attachments[] = { m_swapchain_image_views[i] };
+
+        VkFramebufferCreateInfo framebuffer_info{};
+        framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebuffer_info.renderPass = m_render_pass;
+        framebuffer_info.attachmentCount = 1;
+        framebuffer_info.pAttachments = attachments;
+        framebuffer_info.width = m_surface_extent.width;
+        framebuffer_info.height = m_surface_extent.height;
+        framebuffer_info.layers = 1;
+
+        if (vkCreateFramebuffer(m_logical_device, &framebuffer_info, nullptr, &m_swapchain_framebuffers[i]) != VK_SUCCESS)
+        {
+            m_last_error = "Failed to create framebuffer";
+            ERROR_LOG(m_last_error);
+            success = false;
+        }
+    }
+    return success;
+}
+
+bool Renderer::VulkanRenderContext::CreateCommandPool()
+{
+    bool success = true;
+
+    SQueueFamilyIndices queue_family_indices = find_queue_families(m_physical_device, m_surface);
+
+    VkCommandPoolCreateInfo pool_info = {};
+    pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    pool_info.queueFamilyIndex = queue_family_indices.graphicsFamily.Value();
+    pool_info.flags = 0;
+
+    if (vkCreateCommandPool(m_logical_device, &pool_info, nullptr, &m_command_pool) != VK_SUCCESS)
+    {
+        m_last_error = "Failed to create command pool";
+        ERROR_LOG(m_last_error);
+        success = false;
+    }
+    return success;
+}
+
+bool Renderer::VulkanRenderContext::CreateCommandBuffers()
+{
+    bool success = true;
+    m_command_buffers.resize(m_swapchain_framebuffers.size(), VK_NULL_HANDLE);
+
+    VkCommandBufferAllocateInfo alloc_info = {};
+    alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    alloc_info.commandPool = m_command_pool;
+    alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    alloc_info.commandBufferCount = static_cast<uint32_t>(m_command_buffers.size());
+
+    if (vkAllocateCommandBuffers(m_logical_device, &alloc_info, m_command_buffers.data()) != VK_SUCCESS)
+    {
+        m_last_error = "failed to allocate command buffers!";
+        ERROR_LOG(m_last_error);
+        success = false;
+    }
+
+    for (size_t i = 0; i < m_command_buffers.size() && success == true; i++)
+    {
+        VkCommandBufferBeginInfo begin_info = {};
+        begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        begin_info.flags = 0; // Optional
+        begin_info.pInheritanceInfo = nullptr; // Optional
+
+        if (vkBeginCommandBuffer(m_command_buffers[i], &begin_info) != VK_SUCCESS)
+        {
+            m_last_error = "Failed to begin recording command buffer";
+            ERROR_LOG(m_last_error);
+            success = false;
+            break;
+        }
+
+        VkRenderPassBeginInfo render_pass_info = {};
+        render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_info.renderPass = m_render_pass;
+        render_pass_info.framebuffer = m_swapchain_framebuffers[i];
+
+        render_pass_info.renderArea.offset = { 0, 0 };
+        render_pass_info.renderArea.extent = m_surface_extent;
+
+        VkClearValue clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+        render_pass_info.clearValueCount = 1;
+        render_pass_info.pClearValues = &clear_colour;
+
+        vkCmdBeginRenderPass(m_command_buffers[i], &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBindPipeline(m_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphics_pipeline);
+        vkCmdDraw(m_command_buffers[i], 3, 1, 0, 0);
+        vkCmdEndRenderPass(m_command_buffers[i]);
+
+        if (vkEndCommandBuffer(m_command_buffers[i]) != VK_SUCCESS)
+        {
+            m_last_error = "failed to record command buffer!";
+            ERROR_LOG(m_last_error);
+            success = false;
+        }
+    }
+    return success;
+}
+
+bool Renderer::VulkanRenderContext::CreateSemaphores()
+{
+    VkSemaphoreCreateInfo semaphoreInfo = {};
+    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+    if (vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_image_available_semaphore) != VK_SUCCESS
+    ||  vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_render_finished_semaphore) != VK_SUCCESS)
+    {
+        m_last_error = "failed to create semaphores!";
+        ERROR_LOG(m_last_error);
+        return false;
+    }
+
+    return true;
 }
