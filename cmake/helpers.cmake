@@ -15,6 +15,18 @@ macro(copy_vulkan_libs_to_target_bundle
     endif()
 endmacro(copy_vulkan_libs_to_target_bundle)
 
+macro(copy_folder_to_target_resources
+      target_name
+      src_folder
+      dst_folder
+)
+    if (BUILD_FOR_MAC)
+        add_custom_command(TARGET ${target_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${src_folder} $<TARGET_BUNDLE_CONTENT_DIR:${target_name}>/Resources/${dst_folder}
+        )
+    endif()
+endmacro(copy_folder_to_target_resources)
+
 # macro(set_project_version target major minor patch)
 #     if (BUILD_FOR_MAC)
 #     endif()

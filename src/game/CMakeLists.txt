@@ -41,6 +41,10 @@ if (BUILD_FOR_DESKTOP)
     )
 endif ()
 
+copy_folder_to_target_resources(game_target
+                                ${CMAKE_SOURCE_DIR}/resources/shaders
+                                shaders)
+
 # Platform includes
 # --------------------------------------------------------------------------------
 if (APPLE)
