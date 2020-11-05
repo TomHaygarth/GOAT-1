@@ -47,6 +47,9 @@ if (APPLE)
 	find_library(IOKit IOKit)
 	find_library(AppKit AppKit)
 	target_link_libraries(editor_target PUBLIC ${CoreGraphics} ${CoreVideo} ${CoreFoundation} ${IOKit} ${AppKit} ${ObjC})
+
+elseif (BUILD_FOR_WINDOWS)
+    set_property(TARGET editor_target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources")
 endif()
 
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )

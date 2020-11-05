@@ -69,6 +69,9 @@ if (APPLE)
                           XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path @executable_path/../Frameworks")
 
     copy_vulkan_libs_to_target_bundle(game_target)
+
+elseif (BUILD_FOR_WINDOWS)
+    set_property(TARGET game_target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources")
 endif()
 
 if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU" )
