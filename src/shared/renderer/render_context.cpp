@@ -333,6 +333,9 @@ Renderer::VulkanRenderContext::VulkanRenderContext(GLFWwindow * glfw_window)
 
 Renderer::VulkanRenderContext::~VulkanRenderContext()
 {
+    // Wait for current work to finish before cleaning up
+    vkDeviceWaitIdle(m_logical_device);
+
     if (m_render_finished_semaphore != VK_NULL_HANDLE)
     {
         vkDestroySemaphore(m_logical_device, m_render_finished_semaphore, nullptr);
@@ -546,20 +549,20 @@ void Renderer::VulkanRenderContext::RenderFrame()
         return;
     }
 
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    VkPresentInfoKHR present_info = {};
+    present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signal_semaphores;
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores = signal_semaphores;
 
     VkSwapchainKHR swapChains[] = { m_swapchain };
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &image_index;
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = swapChains;
+    present_info.pImageIndices = &image_index;
 
-    presentInfo.pResults = nullptr; // Optional
+    present_info.pResults = nullptr; // Optional
 
-    vkQueuePresentKHR(m_present_queue, &presentInfo);
+    vkQueuePresentKHR(m_present_queue, &present_info);
 }
 
 bool Renderer::VulkanRenderContext::CreateLogicalDevice()
