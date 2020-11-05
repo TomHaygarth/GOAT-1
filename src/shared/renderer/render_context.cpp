@@ -514,6 +514,7 @@ bool Renderer::VulkanRenderContext::Init()
 
 void Renderer::VulkanRenderContext::RenderFrame()
 {
+    vkDeviceWaitIdle(m_logical_device);
     uint32_t image_index = 0;
     vkAcquireNextImageKHR(m_logical_device,
                           m_swapchain,

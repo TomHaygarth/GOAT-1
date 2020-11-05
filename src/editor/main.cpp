@@ -80,6 +80,7 @@ int main()
     while (glfwWindowShouldClose(window) == false)
     {
         glfwPollEvents();
+        renderer->RenderFrame();
     }
 
     std::cout << "Quitting" << std::endl;
