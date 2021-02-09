@@ -15,6 +15,7 @@
 #include <GLFW/glfw3.h>
 
 constexpr bool bVerbose = false;
+constexpr size_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace
 {
@@ -336,14 +337,30 @@ Renderer::VulkanRenderContext::~VulkanRenderContext()
     // Wait for current work to finish before cleaning up
     vkDeviceWaitIdle(m_logical_device);
 
-    if (m_render_finished_semaphore != VK_NULL_HANDLE)
+    CleanupSwapChain();
+
+    for (auto const fence : m_inflight_fences)
     {
-        vkDestroySemaphore(m_logical_device, m_render_finished_semaphore, nullptr);
+        if (fence != VK_NULL_HANDLE)
+        {
+            vkDestroyFence(m_logical_device, fence, nullptr);
+        }
     }
 
-    if (m_image_available_semaphore != VK_NULL_HANDLE)
+    for (auto const semaphore : m_render_finished_semaphores)
     {
-        vkDestroySemaphore(m_logical_device, m_image_available_semaphore, nullptr);
+        if (semaphore != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(m_logical_device, semaphore, nullptr);
+        }
+    }
+
+    for (auto const semaphore : m_image_available_semaphores)
+    {
+        if (semaphore != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(m_logical_device, semaphore, nullptr);
+        }
     }
 
     if (m_command_pool != VK_NULL_HANDLE)
@@ -351,40 +368,6 @@ Renderer::VulkanRenderContext::~VulkanRenderContext()
         vkDestroyCommandPool(m_logical_device, m_command_pool, nullptr);
     }
 
-    for (auto framebuffer : m_swapchain_framebuffers)
-    {
-        if (framebuffer != VK_NULL_HANDLE)
-        {
-            vkDestroyFramebuffer(m_logical_device, framebuffer, nullptr);
-        }
-    }
-
-    if (m_graphics_pipeline != VK_NULL_HANDLE)
-    {
-        vkDestroyPipeline(m_logical_device, m_graphics_pipeline, nullptr);
-    }
-
-    if (m_pipeline_layout != VK_NULL_HANDLE)
-    {
-        vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
-    }
-
-    if (m_render_pass != VK_NULL_HANDLE)
-    {
-        vkDestroyRenderPass(m_logical_device, m_render_pass, nullptr);
-    }
-
-    for (auto image_view : m_swapchain_image_views)
-    {
-        if (image_view != VK_NULL_HANDLE)
-        {
-            vkDestroyImageView(m_logical_device, image_view, nullptr);
-        }
-    }
-    if (m_swapchain != VK_NULL_HANDLE)
-    {
-        vkDestroySwapchainKHR(m_logical_device, m_swapchain, nullptr);
-    }
     if (m_logical_device != VK_NULL_HANDLE)
     {
         vkDestroyDevice(m_logical_device, nullptr);
@@ -515,21 +498,43 @@ bool Renderer::VulkanRenderContext::Init()
     return true;
 }
 
+void Renderer::VulkanRenderContext::ResizeScreen(uint32_t const width, uint32_t const height)
+{
+    DEBUG_LOG("Recreating swap chain");
+    RecreateSwapChain();
+}
+
 void Renderer::VulkanRenderContext::RenderFrame()
 {
-    vkDeviceWaitIdle(m_logical_device);
+    vkWaitForFences(m_logical_device, 1, &m_inflight_fences[m_current_frame], VK_TRUE, UINT64_MAX);
+
     uint32_t image_index = 0;
-    vkAcquireNextImageKHR(m_logical_device,
-                          m_swapchain,
-                          UINT64_MAX,
-                          m_image_available_semaphore,
-                          VK_NULL_HANDLE,
-                          &image_index);
+    VkResult result = vkAcquireNextImageKHR(m_logical_device,
+                                            m_swapchain,
+                                            UINT64_MAX,
+                                            m_image_available_semaphores[m_current_frame],
+                                            VK_NULL_HANDLE,
+                                            &image_index);
+
+    if(m_images_inflight[m_current_frame] != VK_NULL_HANDLE)
+    {
+        vkWaitForFences(m_logical_device, 1, &m_images_inflight[m_current_frame], VK_TRUE, UINT64_MAX);
+    }
+    m_images_inflight[m_current_frame] = m_inflight_fences[m_current_frame];
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+//        recreateSwapChain();
+        DEBUG_LOG("VK_ERROR_OUT_OF_DATE_KHR");
+    } else if (result == VK_SUBOPTIMAL_KHR)
+    {
+        DEBUG_LOG("VK_SUBOPTIMAL_KHR");
+    }
 
     VkSubmitInfo submit_info = {};
     submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore wait_semaphores[] = { m_image_available_semaphore };
+    VkSemaphore wait_semaphores[] = { m_image_available_semaphores[m_current_frame] };
     VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
     submit_info.waitSemaphoreCount = 1;
     submit_info.pWaitSemaphores = wait_semaphores;
@@ -538,11 +543,13 @@ void Renderer::VulkanRenderContext::RenderFrame()
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &m_command_buffers[image_index];
 
-    VkSemaphore signal_semaphores[] = { m_render_finished_semaphore };
+    VkSemaphore signal_semaphores[] = { m_render_finished_semaphores[m_current_frame] };
     submit_info.signalSemaphoreCount = 1;
     submit_info.pSignalSemaphores = signal_semaphores;
 
-    if (vkQueueSubmit(m_graphics_queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS)
+    vkResetFences(m_logical_device, 1, &m_inflight_fences[m_current_frame]);
+
+    if (vkQueueSubmit(m_graphics_queue, 1, &submit_info, m_inflight_fences[m_current_frame]) != VK_SUCCESS)
     {
         m_last_error = "failed to submit draw command buffer!";
         ERROR_LOG(m_last_error);
@@ -563,6 +570,74 @@ void Renderer::VulkanRenderContext::RenderFrame()
     present_info.pResults = nullptr; // Optional
 
     vkQueuePresentKHR(m_present_queue, &present_info);
+
+    m_current_frame = (m_current_frame + 1) % MAX_FRAMES_IN_FLIGHT;
+    vkDeviceWaitIdle(m_logical_device);
+}
+
+void Renderer::VulkanRenderContext::CleanupSwapChain()
+{
+    for (auto framebuffer : m_swapchain_framebuffers)
+    {
+        if (framebuffer != VK_NULL_HANDLE)
+        {
+            vkDestroyFramebuffer(m_logical_device, framebuffer, nullptr);
+        }
+    }
+    m_swapchain_framebuffers.clear();
+
+    vkFreeCommandBuffers(m_logical_device,
+                         m_command_pool,
+                         static_cast<uint32_t>(m_command_buffers.size()),
+                         m_command_buffers.data());
+    m_command_buffers.clear();
+
+    if (m_graphics_pipeline != VK_NULL_HANDLE)
+    {
+        vkDestroyPipeline(m_logical_device, m_graphics_pipeline, nullptr);
+        m_graphics_pipeline = VK_NULL_HANDLE;
+    }
+
+    if (m_pipeline_layout != VK_NULL_HANDLE)
+    {
+        vkDestroyPipelineLayout(m_logical_device, m_pipeline_layout, nullptr);
+        m_pipeline_layout = VK_NULL_HANDLE;
+    }
+
+    if (m_render_pass != VK_NULL_HANDLE)
+    {
+        vkDestroyRenderPass(m_logical_device, m_render_pass, nullptr);
+        m_render_pass = VK_NULL_HANDLE;
+    }
+
+    for (auto image_view : m_swapchain_image_views)
+    {
+        if (image_view != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(m_logical_device, image_view, nullptr);
+        }
+    }
+    m_swapchain_image_views.clear();
+
+    if (m_swapchain != VK_NULL_HANDLE)
+    {
+        vkDestroySwapchainKHR(m_logical_device, m_swapchain, nullptr);
+        m_swapchain = VK_NULL_HANDLE;
+    }
+}
+
+bool Renderer::VulkanRenderContext::RecreateSwapChain()
+{
+    vkDeviceWaitIdle(m_logical_device);
+
+    CleanupSwapChain();
+
+    return CreateSwapChain()
+        && CreateImageViews()
+        && CreateRenderPass()
+        && CreateGraphicsPipeline()
+        && CreateFramebuffers()
+        && CreateCommandBuffers();
 }
 
 bool Renderer::VulkanRenderContext::CreateLogicalDevice()
@@ -1038,15 +1113,28 @@ bool Renderer::VulkanRenderContext::CreateCommandBuffers()
 
 bool Renderer::VulkanRenderContext::CreateSemaphores()
 {
+    m_image_available_semaphores.resize(MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+    m_render_finished_semaphores.resize(MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+    m_inflight_fences.resize(MAX_FRAMES_IN_FLIGHT, VK_NULL_HANDLE);
+    m_images_inflight.resize(m_swapchain_images.size(), VK_NULL_HANDLE);
+
     VkSemaphoreCreateInfo semaphoreInfo = {};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-    if (vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_image_available_semaphore) != VK_SUCCESS
-    ||  vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_render_finished_semaphore) != VK_SUCCESS)
+    VkFenceCreateInfo fence_info{};
+    fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        m_last_error = "failed to create semaphores!";
-        ERROR_LOG(m_last_error);
-        return false;
+        if (vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_image_available_semaphores[i]) != VK_SUCCESS
+        ||  vkCreateSemaphore(m_logical_device, &semaphoreInfo, nullptr, &m_render_finished_semaphores[i]) != VK_SUCCESS
+        ||  vkCreateFence(m_logical_device, &fence_info, nullptr, &m_inflight_fences[i]) != VK_SUCCESS)
+        {
+            m_last_error = "failed to create semaphores!";
+            ERROR_LOG(m_last_error);
+            return false;
+        }
     }
 
     return true;

@@ -14,10 +14,13 @@
 
 #define UNUSED(expr) (void)expr
 
+Renderer::VulkanRenderContext * renderer = nullptr;
+
 static void error_callback(int, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
 }
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // TODO: Remove unused macro when these are used
@@ -29,6 +32,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 }
+
+static void resize_callback(GLFWwindow * _window, int _width, int _height)
+{
+    UNUSED(_window);
+    renderer->ResizeScreen(static_cast<uint32_t>(_width),
+                           static_cast<uint32_t>(_height));
+}
+
 int main()
 {
     std::cout << "Init GLFW begin" << std::endl;
@@ -58,7 +69,7 @@ int main()
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-    std::unique_ptr<Renderer::VulkanRenderContext> renderer = std::make_unique<Renderer::VulkanRenderContext>(window);
+    renderer = new Renderer::VulkanRenderContext(window);
     if (renderer->HasError() == false)
     {
         renderer->Init();
@@ -76,6 +87,7 @@ int main()
     // auto test = matrix * vec;
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetWindowSizeCallback(window, resize_callback);
 
     while (glfwWindowShouldClose(window) == false && renderer->HasError() == false)
     {

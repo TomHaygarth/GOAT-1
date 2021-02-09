@@ -15,11 +15,15 @@ namespace Renderer
         ~VulkanRenderContext();
 
         bool Init();
+        void ResizeScreen(uint32_t const width, uint32_t const height);
         void RenderFrame();
         bool HasError() const { return m_last_error.empty() == false; }
         std::string const GetLastError() const { return m_last_error; }
 
     private:
+
+        void CleanupSwapChain();
+        bool RecreateSwapChain();
 
         bool CreateLogicalDevice();
         bool CreateSwapChain();
@@ -46,8 +50,11 @@ namespace Renderer
         VkPipelineLayout m_pipeline_layout = VK_NULL_HANDLE;
         VkPipeline m_graphics_pipeline = VK_NULL_HANDLE;
         VkCommandPool m_command_pool = VK_NULL_HANDLE;
-        VkSemaphore m_image_available_semaphore = VK_NULL_HANDLE;
-        VkSemaphore m_render_finished_semaphore = VK_NULL_HANDLE;
+        std::vector<VkSemaphore> m_image_available_semaphores;
+        std::vector<VkSemaphore> m_render_finished_semaphores;
+        std::vector<VkFence> m_inflight_fences;
+        std::vector<VkFence> m_images_inflight;
+        size_t m_current_frame = 0;
 
         std::vector<VkImage> m_swapchain_images;
         std::vector<VkImageView> m_swapchain_image_views;
