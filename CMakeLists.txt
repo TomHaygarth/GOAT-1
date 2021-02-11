@@ -56,6 +56,33 @@ set (BUILD_FOR_UWP ON CACHE INTERNAL "" FORCE)
 
 endif()
 
+
+# Render properties
+# --------------------------------------------------------------------------------
+set (BUILD_RENDERER_VULKAN OFF CACHE INTERNAL "" FORCE)
+set (BUILD_RENDERER_OPENGL OFF CACHE INTERNAL "" FORCE)
+set (BUILD_RENDERER_DX12 OFF CACHE INTERNAL "" FORCE)
+
+if (BUILD_FOR_DESKTOP)
+
+    set (Renderer "vulkan" CACHE STRING "Which renderer to use [vulkan, opengl, dx12]")
+
+    if (${Renderer} STREQUAL "vulkan")
+        set (BUILD_RENDERER_VULKAN ON CACHE INTERNAL "" FORCE)
+
+    elseif (${Renderer} STREQUAL "opengl")
+        set (BUILD_RENDERER_OPENGL ON CACHE INTERNAL "" FORCE)
+
+    elseif (${Renderer} STREQUAL "dx12")
+        set (BUILD_RENDERER_DX12 ON CACHE INTERNAL "" FORCE)
+
+    endif()
+
+elseif(BUILD_FOR_UWP)
+
+    set (BUILD_RENDERER_DX12 ON CACHE INTERNAL "" FORCE)
+endif()
+
 # Options
 # --------------------------------------------------------------------------------
 
