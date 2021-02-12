@@ -20,7 +20,6 @@ if (BUILD_FOR_DESKTOP)
         message("Set VULKAN_SDK env var to $ENV{VULKAN_SDK}")
 	elseif(BUILD_FOR_WINDOWS)
 	    find_package(VULKAN REQUIRED)
-		# add_subdirectory(${EXTERNAL_SRC_DIR}/glm)
     endif()
 
 endif()

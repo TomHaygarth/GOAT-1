@@ -36,10 +36,19 @@ if (BUILD_FOR_DESKTOP)
     target_link_libraries(game_target PUBLIC
         glfw
         glm::glm
-        Vulkan::Vulkan
         shared_target
     )
+
+    copy_vulkan_libs_to_target_bundle(game_target)
 endif ()
+
+# if (BUILD_RENDERER_VULKAN)
+# find_package(Vulkan REQUIRED)
+
+# target_link_libraries(game_target PUBLIC
+#     Vulkan::Vulkan
+# )
+# endif()
 
 copy_folder_to_target_resources(game_target
                                 ${CMAKE_SOURCE_DIR}/resources/shaders
@@ -67,8 +76,6 @@ if (APPLE)
     set_target_properties(game_target PROPERTIES
                           MACOSX_BUNDLE TRUE
                           XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path @executable_path/../Frameworks")
-
-    copy_vulkan_libs_to_target_bundle(game_target)
 
 elseif (BUILD_FOR_WINDOWS)
     set_property(TARGET game_target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources")

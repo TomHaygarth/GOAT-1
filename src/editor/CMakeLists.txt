@@ -27,15 +27,14 @@ target_precompile_headers(editor_target PRIVATE
 # target_include_directories(game_target PUBLIC ${GLFW3_INCLUDE_DIR})
 
 if (BUILD_FOR_DESKTOP)
-    find_package(Vulkan REQUIRED)
 
     target_link_libraries(editor_target PUBLIC
         shared_target
         glfw
-        Vulkan::Vulkan
         glm::glm
     )
 endif ()
+
 
 # Platform includes
 # --------------------------------------------------------------------------------
@@ -47,6 +46,14 @@ if (APPLE)
 	find_library(IOKit IOKit)
 	find_library(AppKit AppKit)
 	target_link_libraries(editor_target PUBLIC ${CoreGraphics} ${CoreVideo} ${CoreFoundation} ${IOKit} ${AppKit} ${ObjC})
+
+    set_target_properties(editor_target PROPERTIES
+        XCODE_GENERATE_SCHEME TRUE
+        XCODE_SCHEME_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources"
+    )
+
+    # set_property(TARGET editor_target PROPERTY XCODE_GENERATE_SCHEME TRUE)
+    # set_property(TARGET editor_target PROPERTY XCODE_SCHEME_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources")
 
 elseif (BUILD_FOR_WINDOWS)
     set_property(TARGET editor_target PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/resources")
