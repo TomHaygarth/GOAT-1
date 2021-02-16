@@ -24,3 +24,8 @@ if (BUILD_FOR_DESKTOP)
 
 endif()
 
+if (BUILD_RENDERER_OPENGL)
+    add_subdirectory(${EXTERNAL_SRC_DIR}/glad)
+    add_subdirectory(${EXTERNAL_SRC_DIR}/SPIRV-Cross)
+endif()
+

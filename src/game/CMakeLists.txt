@@ -34,21 +34,17 @@ if (BUILD_FOR_DESKTOP)
     find_package(Vulkan REQUIRED)
 
     target_link_libraries(game_target PUBLIC
-        glfw
         glm::glm
         shared_target
     )
 
-    copy_vulkan_libs_to_target_bundle(game_target)
 endif ()
 
-# if (BUILD_RENDERER_VULKAN)
-# find_package(Vulkan REQUIRED)
+if (BUILD_RENDERER_VULKAN)
+    find_package(Vulkan REQUIRED)
 
-# target_link_libraries(game_target PUBLIC
-#     Vulkan::Vulkan
-# )
-# endif()
+    copy_vulkan_libs_to_target_bundle(game_target)
+endif()
 
 copy_folder_to_target_resources(game_target
                                 ${CMAKE_SOURCE_DIR}/resources/shaders

@@ -8,10 +8,13 @@ namespace Window
     class IWindowFunctions
     {
     public:
-        virtual ~IWindowFunctions() = 0;
+
+        virtual ~IWindowFunctions();
 
         virtual void Input() = 0;
         virtual void Render() = 0;
+
+        virtual bool WindowShouldClose() = 0;
     };
 
     class WindowInstance
@@ -20,7 +23,7 @@ namespace Window
         WindowInstance(std::string const & window_name,
                        int width,
                        int height,
-                       std::unique_ptr<IWindowFunctions> && window_funcs);
+                       IWindowFunctions * window_funcs);
 
         int Run();
 
@@ -28,13 +31,13 @@ namespace Window
         std::string m_title;
         int m_width;
         int m_height;
-        std::unique_ptr<IWindowFunctions> m_window_funcs;
+        IWindowFunctions * m_window_funcs;
     };
 
     WindowInstance * create_window(std::string const & window_name,
                                    int width,
                                    int height,
-                                   std::unique_ptr<IWindowFunctions> && window_funcs);
+                                   IWindowFunctions * window_funcs);
 
     void destroy_window(WindowInstance * window);
 }

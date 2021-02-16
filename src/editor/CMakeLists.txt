@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 
 # editor src files
 set(editor_src_includes
+
+    "editor_window.cpp"
+    "editor_window.hpp"
     "main.cpp"
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${editor_src_includes})

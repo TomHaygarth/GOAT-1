@@ -1,4 +1,4 @@
-#include "render_context.hpp"
+#include "vulkan_render_context.hpp"
 
 #include "utility/logging.hpp"
 #include "utility/optional.hpp"
@@ -502,6 +502,10 @@ void Renderer::VulkanRenderContext::ResizeScreen(uint32_t const width, uint32_t 
 {
     DEBUG_LOG("Recreating swap chain");
     RecreateSwapChain();
+}
+
+void Renderer::VulkanRenderContext::PreRender()
+{
 }
 
 void Renderer::VulkanRenderContext::RenderFrame()

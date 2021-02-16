@@ -16,6 +16,7 @@ namespace Renderer
 
         bool Init();
         void ResizeScreen(uint32_t const width, uint32_t const height);
+        void PreRender();
         void RenderFrame();
         bool HasError() const { return m_last_error.empty() == false; }
         std::string const GetLastError() const { return m_last_error; }
