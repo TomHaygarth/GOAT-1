@@ -39,6 +39,7 @@ if (${Platform} STREQUAL "macos")
     set (BUILD_FOR_DESKTOP ON CACHE INTERNAL "" FORCE)
     set (BUILD_FOR_MAC ON CACHE INTERNAL "" FORCE)
     set (CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Minimum OS X deployment version"  FORCE)
+    set (CMAKE_XCODE_GENERATE_SCHEME TRUE)
 
 elseif (${Platform} STREQUAL "windows")
 
