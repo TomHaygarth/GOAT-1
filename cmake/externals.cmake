@@ -29,3 +29,5 @@ if (BUILD_RENDERER_OPENGL)
     add_subdirectory(${EXTERNAL_SRC_DIR}/SPIRV-Cross)
 endif()
 
+include_directories(SYSTEM "${EXTERNAL_SRC_DIR}/sokol")
+
