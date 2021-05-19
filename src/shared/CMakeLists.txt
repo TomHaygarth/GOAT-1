@@ -6,6 +6,11 @@ cmake_minimum_required(VERSION 3.16)
 
 set (shared_sources
 
+    "assets/asset_handle.hpp"
+
+    "audio/audio_manager.cpp"
+    "audio/audio_manager.hpp"
+
     "utility/logging.cpp"
     "utility/logging.hpp"
     "utility/optional.hpp"
@@ -21,6 +26,7 @@ add_library(shared_target STATIC
 target_include_directories(shared_target PUBLIC
     "./"
     ${EXTERNAL_SRC_DIR}/imgui
+    ${EXTERNAL_SRC_DIR}/sokol
 )
 
 message ("INCLUDING ${CMAKE_CURRENT_SOURCE_DIR}")

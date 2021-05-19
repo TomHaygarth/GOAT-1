@@ -33,3 +33,9 @@ std::vector<char> FileHelpers::read_file(std::string const & filename)
 
     return result;
 }
+
+bool folder_exists(std::string const & path)
+{
+    // TODO: implement native functions
+    return false;
+}
