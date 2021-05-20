@@ -2,6 +2,8 @@
 
 #include "imgui.h"
 
+#include "renderer/primitives/shape_2d.hpp"
+
 EditorWindow::EditorWindow()
 : m_should_close(false)
 , m_display_about(false)
@@ -44,6 +46,23 @@ void EditorWindow::Input()
 
         ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Testing"))
+    {
+        bool test_triangle_enabled = m_test_renderable != nullptr;
+
+        if (ImGui::MenuItem("Draw Triangle", "", &test_triangle_enabled))
+        {
+            if (m_test_renderable != nullptr)
+            {
+                m_test_renderable = nullptr;
+            }
+            else
+            {
+                m_test_renderable = std::make_unique<Renderer::CTriangle2d>();
+            }
+        }
+        ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Help"))
     {
         if (ImGui::MenuItem("About"))
@@ -83,8 +102,12 @@ void EditorWindow::Input()
     }
 }
 
-void EditorWindow::Render()
+void EditorWindow::Render(Renderer::IRenderContext * render_context)
 {
+    if (m_test_renderable != nullptr)
+    {
+        render_context->SubmitRenderable(m_test_renderable.get());
+    }
 }
 
 bool EditorWindow::WindowShouldClose()

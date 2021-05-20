@@ -579,6 +579,11 @@ void Renderer::VulkanRenderContext::RenderFrame()
     vkDeviceWaitIdle(m_logical_device);
 }
 
+void Renderer::VulkanRenderContext::SubmitRenderable(IRenderable const * renderable)
+{
+    // TODO: implement
+}
+
 void Renderer::VulkanRenderContext::CleanupSwapChain()
 {
     for (auto framebuffer : m_swapchain_framebuffers)

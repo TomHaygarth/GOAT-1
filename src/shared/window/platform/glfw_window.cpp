@@ -222,7 +222,7 @@ int Window::WindowInstance::Run()
 
         if (m_window_funcs != nullptr)
         {
-            m_window_funcs->Render();
+            m_window_funcs->Render(renderer);
         }
 
         imgui_draw_frame();

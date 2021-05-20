@@ -19,8 +19,20 @@ set (shared_sources
     )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${shared_sources})
 
+set (renderable_sources
+    "renderer/render_context.cpp"
+    "renderer/render_context.hpp"
+    "renderer/renderable.cpp"
+    "renderer/renderable.hpp"
+
+    "renderer/primitives/shape_2d.cpp"
+    "renderer/primitives/shape_2d.hpp"
+    )
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${renderable_sources})
+
 add_library(shared_target STATIC
     ${shared_sources}
+    ${renderable_sources}
 )
 
 target_include_directories(shared_target PUBLIC
@@ -129,6 +141,7 @@ target_precompile_headers(shared_target PRIVATE
                           utility/logging.hpp
                           utility/optional.hpp
                           utility/file/file_helper.hpp
+                          renderer/renderable.hpp
                           )
 
 target_compile_features(shared_target PUBLIC cxx_std_14)

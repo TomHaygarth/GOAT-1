@@ -3,6 +3,8 @@
 #include <string>
 #include <memory>
 
+#include "renderer/render_context.hpp"
+
 namespace Window
 {
     class IWindowFunctions
@@ -12,7 +14,7 @@ namespace Window
         virtual ~IWindowFunctions();
 
         virtual void Input() = 0;
-        virtual void Render() = 0;
+        virtual void Render(Renderer::IRenderContext * render_context) = 0;
 
         virtual bool WindowShouldClose() = 0;
     };

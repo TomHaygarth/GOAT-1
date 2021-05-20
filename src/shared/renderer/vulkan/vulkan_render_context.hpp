@@ -4,20 +4,23 @@
 #include<string>
 #include<vector>
 
+#include "renderer/render_context.hpp"
+
 struct GLFWwindow;
 
 namespace Renderer
 {
-    class VulkanRenderContext
+    class VulkanRenderContext : public IRenderContext
     {
     public:
         VulkanRenderContext(GLFWwindow * glfw_window);
         ~VulkanRenderContext();
 
-        bool Init();
-        void ResizeScreen(uint32_t const width, uint32_t const height);
-        void PreRender();
-        void RenderFrame();
+        virtual bool Init() override;
+        virtual void ResizeScreen(uint32_t const width, uint32_t const height) override;
+        virtual void PreRender() override;
+        virtual void RenderFrame() override;
+        virtual void SubmitRenderable(IRenderable const * renderable) override;
         bool HasError() const { return m_last_error.empty() == false; }
         std::string const GetLastError() const { return m_last_error; }
 
